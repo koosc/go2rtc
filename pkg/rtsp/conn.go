@@ -277,6 +277,15 @@ func (c *Conn) WriteRequest(req *tcp.Request) error {
 		req.Header.Set("Session", c.session)
 	}
 
+	if c.Backchannel {
+		// https://www.onvif.org/wp-content/uploads/2019/07/ONVIF_Audio_Backchannel_Client_Test_Specification_19.06.pdf
+		// https://www.happytimesoft.com/knowledge/audio-back-channel.html
+		switch req.Method {
+		case MethodDescribe, MethodSetup, MethodPlay, MethodTeardown:
+			req.Header.Set("Require", "www.onvif.org/ver20/backchannel")
+		}
+	}
+
 	if req.Body != nil {
 		val := strconv.Itoa(len(req.Body))
 		req.Header.Set("Content-Length", val)

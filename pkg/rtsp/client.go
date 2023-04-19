@@ -128,10 +128,6 @@ func (c *Conn) Describe() error {
 		},
 	}
 
-	if c.Backchannel {
-		req.Header.Set("Require", "www.onvif.org/ver20/backchannel")
-	}
-
 	if c.UserAgent != "" {
 		// this camera will answer with 401 on DESCRIBE without User-Agent
 		// https://github.com/AlexxIT/go2rtc/issues/235
