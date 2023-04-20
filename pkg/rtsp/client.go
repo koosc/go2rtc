@@ -128,12 +128,6 @@ func (c *Conn) Describe() error {
 		},
 	}
 
-	if c.UserAgent != "" {
-		// this camera will answer with 401 on DESCRIBE without User-Agent
-		// https://github.com/AlexxIT/go2rtc/issues/235
-		req.Header.Set("User-Agent", c.UserAgent)
-	}
-
 	res, err := c.Do(req)
 	if err != nil {
 		return err
@@ -273,7 +267,14 @@ func (c *Conn) SetupMedia(media *core.Media) (byte, error) {
 }
 
 func (c *Conn) Play() (err error) {
-	req := &tcp.Request{Method: MethodPlay, URL: c.URL}
+	req := &tcp.Request{
+		Method: MethodPlay,
+		URL:    c.URL,
+		Header: map[string][]string{
+			"Range": {"npt=0.000-"},
+		},
+	}
+	// can't wait response because some cameras starts send interleaved data before it
 	return c.WriteRequest(req)
 }
 

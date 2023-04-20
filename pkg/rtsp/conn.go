@@ -34,6 +34,7 @@ type Conn struct {
 	conn      net.Conn
 	keepalive int
 	mode      core.Mode
+	playOK    bool
 	reader    *bufio.Reader
 	sequence  int
 	session   string
@@ -151,6 +152,8 @@ func (c *Conn) Handle() (err error) {
 					return
 				}
 				c.Fire(res)
+				// for playing backchannel only after OK response on play
+				c.playOK = true
 				continue
 
 			case "OPTI", "TEAR", "DESC", "SETU", "PLAY", "PAUS", "RECO", "ANNO", "GET_", "SET_":
@@ -275,6 +278,12 @@ func (c *Conn) WriteRequest(req *tcp.Request) error {
 
 	if c.session != "" {
 		req.Header.Set("Session", c.session)
+	}
+
+	if c.UserAgent != "" {
+		// this camera will answer with 401 on DESCRIBE without User-Agent
+		// https://github.com/AlexxIT/go2rtc/issues/235
+		req.Header.Set("User-Agent", c.UserAgent)
 	}
 
 	if c.Backchannel {

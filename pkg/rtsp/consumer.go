@@ -68,12 +68,13 @@ func (c *Conn) AddTrack(media *core.Media, codec *core.Codec, track *core.Receiv
 
 func (c *Conn) packetWriter(codec *core.Codec, channel, payloadType uint8) core.HandlerFunc {
 	handlerFunc := func(packet *rtp.Packet) {
-		if c.state == StateNone {
+		if c.state == StateNone || !c.playOK {
 			return
 		}
 
 		clone := *packet
 		clone.Header.PayloadType = payloadType
+		clone.Header.Marker = true
 
 		size := clone.MarshalSize()
 
