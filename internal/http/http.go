@@ -2,17 +2,19 @@ package http
 
 import (
 	"errors"
+	"log"
+	"net"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
+
 	"github.com/AlexxIT/go2rtc/internal/streams"
 	"github.com/AlexxIT/go2rtc/pkg/core"
 	"github.com/AlexxIT/go2rtc/pkg/magic"
 	"github.com/AlexxIT/go2rtc/pkg/mjpeg"
 	"github.com/AlexxIT/go2rtc/pkg/rtmp"
 	"github.com/AlexxIT/go2rtc/pkg/tcp"
-	"net"
-	"net/http"
-	"net/url"
-	"strings"
-	"time"
 )
 
 func Init() {
@@ -25,9 +27,33 @@ func Init() {
 
 func handleHTTP(url string) (core.Producer, error) {
 	// first we get the Content-Type to define supported producer
+
+	var header string
+	var headerValue string
+
+	// split string on spaces and check how many args there are
+	split := strings.Split(url, " ")
+	if len(split) > 1 {
+		log.Println("Header found")
+		header = split[1]
+		headerValue = split[2]
+		url = split[0]
+		if header == "Authorization" {
+			// Add Bear to header value
+			headerValue = "Bearer " + headerValue
+		}
+	} else {
+		log.Println("No header found")
+	}
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
+	}
+
+	// Set header if one was provided
+	if header != "" {
+		req.Header.Set(header, headerValue)
 	}
 
 	res, err := tcp.Do(req)
